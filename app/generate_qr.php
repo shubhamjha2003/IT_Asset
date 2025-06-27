@@ -6,7 +6,7 @@ $id = $_GET['id'];
 $result = $conn->query("SELECT * FROM departments WHERE id = $id");
 $data = $result->fetch_assoc();
 
-$tempDir = "../uploaded file/";
+$tempDir = "../uploaded_file/";
 $fileName = 'dept_qr_' . $id . '.png';
 $filePath = $tempDir . $fileName;
 

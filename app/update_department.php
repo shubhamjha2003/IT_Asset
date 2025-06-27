@@ -1,3 +1,6 @@
+<?php ob_start(); ?>
+
+
 <?php
 include('../components/navbar.php');
 include('../components/sidebar.php');
@@ -64,3 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 </body>
 </html>
+
+
+<?php ob_end_flush(); ?>

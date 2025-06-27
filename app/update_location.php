@@ -1,3 +1,5 @@
+<?php ob_start(); ?>
+
 <?php include('../components/navbar.php'); ?>
 <?php include('../components/sidebar.php'); ?>
 <?php
@@ -94,3 +96,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 </body>
 </html>
+
+<?php ob_end_flush(); ?>

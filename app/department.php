@@ -9,6 +9,17 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+
+<!-- Fixed Bottom-Right Button -->
+<a href="d_department.php" 
+   class="btn btn-primary position-fixed" 
+   style="bottom: 20px; right: 20px; z-index: 999;">
+   Download PDF
+</a>
+
+
+
+
 <div class="content" style="margin-left: 200px; padding-top: 70px;">
   <div class="container mt-4">
     <h2>Department List</h2>
@@ -37,12 +48,12 @@
                     <td>{$row['fax']}</td>
                     <td>{$row['manager']}</td>
                     <td>{$row['location']}</td>
-                    <td><img src='../uploaded file/{$row['image']}' height='50'></td>
+                    <td><img src='../uploaded_file/{$row['image']}' height='50'></td>
                     <td>
                       <a href='update_department.php?id={$row['id']}' class='btn btn-primary btn-sm'>Edit</a>
                       <a href='delete_department.php?id={$row['id']}' class='btn btn-danger btn-sm'>Delete</a>
                       <a href='generate_qr.php?id={$row['id']}' class='btn btn-warning btn-sm'>QR</a>
-                      <a href='download_pdf.php?id={$row['id']}' class='btn btn-secondary btn-sm'>PDF</a>
+                      <a href='download_pdf.php?id={$row['id']}' class='btn btn-secondary btn-sm'>SAVE</a>
                     </td>
                   </tr>";
           }
@@ -54,6 +65,5 @@
 <a href='delete_department.php?id=<?= $row['id'] ?>'
    onclick="return confirm('Are you sure you want to delete this department?')"
    class='btn btn-danger btn-sm'>Delete</a>
-
 </body>
 </html>

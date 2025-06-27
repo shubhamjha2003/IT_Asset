@@ -1,3 +1,6 @@
+<?php ob_start(); ?>
+
+
 <?php include('../components/navbar.php'); ?>
 <?php include('../components/sidebar.php'); ?>
 <?php include('../db/connection.php'); ?>
@@ -5,6 +8,8 @@
 <?php
 $id = $_GET['id'];
 $result = $conn->query("SELECT * FROM categories WHERE id = $id");
+
+
 $data = $result->fetch_assoc();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -100,3 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 </body>
 </html>
+
+
+<?php ob_end_flush(); ?>

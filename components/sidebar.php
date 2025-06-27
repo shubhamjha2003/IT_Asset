@@ -6,7 +6,7 @@
     background-color: #f8f9fa;
     border-right: 1px solid #dee2e6;
     height: 100vh;
-    width: 220px;
+    width: 190px;
     position: fixed;
     top: 56px; /* matches navbar height */
     left: 0;

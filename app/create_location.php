@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <select class="form-select" name="type" required>
                             <option value="">Select</option>
                             <option>Head Office</option>
-                            <option>Branch</option>
+                            <option>Regional Office</option>
                             <option>Warehouse</option>
                         </select>
                     </div>
@@ -78,19 +78,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" class="form-control" name="city" required>
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label>State</label>
-                        <input type="text" class="form-control" name="state" required>
-                    </div>
+    <label>State</label>
+    <select class="form-select" name="state" required>
+        <option value="">Select State</option>
+        <option>Andhra Pradesh</option>
+        <option>Arunachal Pradesh</option>
+        <option>Assam</option>
+        <option>Bihar</option>
+        <option>Chhattisgarh</option>
+        <option>Goa</option>
+        <option>Gujarat</option>
+        <option>Haryana</option>
+        <option>Himachal Pradesh</option>
+        <option>Jharkhand</option>
+        <option>Karnataka</option>
+        <option>Kerala</option>
+        <option>Madhya Pradesh</option>
+        <option>Maharashtra</option>
+        <option>Manipur</option>
+        <option>Meghalaya</option>
+        <option>Mizoram</option>
+        <option>Nagaland</option>
+        <option>Odisha</option>
+        <option>Punjab</option>
+        <option>Rajasthan</option>
+        <option>Sikkim</option>
+        <option>Tamil Nadu</option>
+        <option>Telangana</option>
+        <option>Tripura</option>
+        <option>Uttar Pradesh</option>
+        <option>Uttarakhand</option>
+        <option>West Bengal</option>
+    </select>
+</div>
                     <div class="col-md-4 mb-3">
                         <label>Country</label>
-                        <select class="form-select" name="country" required>
-                            <option value="">Select Country</option>
-                            <option>India</option>
-                            <option>USA</option>
-                            <option>UK</option>
-                            <option>Germany</option>
-                            <option>Other</option>
-                        </select>
+                            <select class="form-select" name="country" required readonly>
+                                <option selected>India</option>
+                            </select>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>ZIP / Postal Code</label>
