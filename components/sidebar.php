@@ -82,8 +82,8 @@
         <li><a href="supplier.php"><i class="bi bi-truck me-2"></i>Supplier</a></li>
         <li><a href="manufacturer.php"><i class="bi bi-gear-fill me-2"></i>Manufacturer</a></li>
         <li><a href="category.php"><i class="bi bi-tags me-2"></i>Category</a></li>
-        <li><a href="Asset Model.php"><i class="bi bi-pc-display me-2"></i>Asset Model</a></li>
-        <li><a href="ConsumerField.php"><i class="bi bi-ui-checks-grid me-2"></i>Consumer Fields</a></li>
+        <li><a href="asset_model.php"><i class="bi bi-pc-display me-2"></i>Asset Model</a></li>
+        <li><a href="custom_fields.php"><i class="bi bi-ui-checks-grid me-2"></i>Custom Fields</a></li>
       </ul>
     </li>
   </ul>
