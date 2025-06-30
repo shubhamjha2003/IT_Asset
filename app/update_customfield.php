@@ -3,6 +3,26 @@
 <?php include('../db/connection.php'); ?>
 
 <?php
+// Get existing data
+if (!isset($_GET['id'])) {
+    header("Location: CustomField.php");
+    exit;
+}
+$id = $_GET['id'];
+
+$stmt = $conn->prepare("SELECT * FROM custom_fields WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$field = $result->fetch_assoc();
+$stmt->close();
+
+if (!$field) {
+    echo "<div class='alert alert-danger'>Field not found.</div>";
+    exit;
+}
+
+// Update logic
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $field_name = $_POST['field_name'];
     $form_element = $_POST['form_element'];
@@ -18,45 +38,54 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $must_be_unique = isset($_POST['must_be_unique']) ? 1 : 0;
     $allow_user_view = isset($_POST['allow_user_view']) ? 1 : 0;
 
-    $stmt = $conn->prepare("INSERT INTO custom_fields (field_name, form_element, format, help_text, encrypt, auto_add, show_in_list, show_in_requestable, include_in_email, must_be_unique, allow_user_view, fieldsets)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssiiiiiiis", $field_name, $form_element, $format, $help_text, $encrypt, $auto_add, $show_in_list, $show_in_requestable, $include_in_email, $must_be_unique, $allow_user_view, $fieldsets);
+    $stmt = $conn->prepare("UPDATE custom_fields SET 
+        field_name=?, form_element=?, format=?, help_text=?, encrypt=?, auto_add=?, 
+        show_in_list=?, show_in_requestable=?, include_in_email=?, must_be_unique=?, 
+        allow_user_view=?, fieldsets=? WHERE id=?");
+
+    $stmt->bind_param("ssssiiiiiiisi", $field_name, $form_element, $format, $help_text, $encrypt, $auto_add,
+        $show_in_list, $show_in_requestable, $include_in_email, $must_be_unique, $allow_user_view, $fieldsets, $id);
     $stmt->execute();
     $stmt->close();
 
-    header("Location: CustomField.php?msg=added");
+    header("Location: CustomField.php?msg=updated");
     exit;
 }
+
+// Pre-select fieldsets
+$selected_fieldsets = explode(',', $field['fieldsets']);
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Create Custom Field</title>
+    <title>Edit Custom Field</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-10 offset-md-2 p-4">
-            <h2 class="mb-4">Create Custom Field</h2>
+            <h2 class="mb-4">Edit Custom Field</h2>
 
             <form method="POST">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Field Name</label>
-                        <input type="text" name="field_name" class="form-control" required>
+                        <input type="text" name="field_name" class="form-control" required value="<?= $field['field_name'] ?>">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Form Element</label>
                         <select name="form_element" class="form-select" required>
                             <option value="">Select</option>
-                            <option value="Textbox">Textbox</option>
-                            <option value="Textarea">Textarea</option>
-                            <option value="Dropdown">Dropdown</option>
-                            <option value="Checkbox">Checkbox</option>
-                            <option value="Date">Date</option>
+                            <?php
+                            $elements = ['Textbox', 'Textarea', 'Dropdown', 'Checkbox', 'Date'];
+                            foreach ($elements as $e) {
+                                $selected = ($field['form_element'] === $e) ? 'selected' : '';
+                                echo "<option value='$e' $selected>$e</option>";
+                            }
+                            ?>
                         </select>
                     </div>
 
@@ -64,37 +93,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label>Format</label>
                         <select name="format" class="form-select">
                             <option value="">Any</option>
-                            <option value="Text">Text</option>
-                            <option value="Number">Number</option>
-                            <option value="Email">Email</option>
+                            <?php
+                            $formats = ['Text', 'Number', 'Email'];
+                            foreach ($formats as $f) {
+                                $selected = ($field['format'] === $f) ? 'selected' : '';
+                                echo "<option value='$f' $selected>$f</option>";
+                            }
+                            ?>
                         </select>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Help Text</label>
-                        <input type="text" name="help_text" class="form-control">
+                        <input type="text" name="help_text" class="form-control" value="<?= $field['help_text'] ?>">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Fieldsets</label><br>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="fieldsets[]" value="PC" id="pc">
-                            <label class="form-check-label" for="pc">PC</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="fieldsets[]" value="Printer" id="printer">
-                            <label class="form-check-label" for="printer">Printer</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="select_all">
-                            <label class="form-check-label" for="select_all"><strong>Select All</strong></label>
-                        </div>
+                        <?php
+                        $options = ['PC', 'Printer'];
+                        foreach ($options as $set) {
+                            $checked = in_array($set, $selected_fieldsets) ? 'checked' : '';
+                            echo "<div class='form-check'>
+                                    <input class='form-check-input' type='checkbox' name='fieldsets[]' value='$set' id='$set' $checked>
+                                    <label class='form-check-label' for='$set'>$set</label>
+                                  </div>";
+                        }
+                        ?>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Options</label><br>
                         <?php
-                        $checkboxes = [
+                        $flags = [
                             'encrypt' => 'Encrypt before storing',
                             'auto_add' => 'Auto add to all types',
                             'show_in_list' => 'Show in asset list',
@@ -103,9 +134,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             'must_be_unique' => 'Must be unique',
                             'allow_user_view' => 'Allow user to view'
                         ];
-                        foreach ($checkboxes as $key => $label) {
+                        foreach ($flags as $key => $label) {
+                            $checked = $field[$key] ? 'checked' : '';
                             echo "<div class='form-check'>
-                                    <input class='form-check-input' type='checkbox' name='$key' id='$key'>
+                                    <input class='form-check-input' type='checkbox' name='$key' id='$key' $checked>
                                     <label class='form-check-label' for='$key'>$label</label>
                                   </div>";
                         }
@@ -114,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <div class="col-md-12 mt-4 d-flex justify-content-between">
                         <a href="CustomField.php" class="btn btn-secondary">Back</a>
-                        <button type="submit" class="btn btn-primary">Save Field</button>
+                        <button type="submit" class="btn btn-primary">Update Field</button>
                     </div>
                 </div>
             </form>
@@ -122,14 +154,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 </div>
-
-<script>
-    document.getElementById('select_all').addEventListener('change', function () {
-        const isChecked = this.checked;
-        document.querySelectorAll('input[name="fieldsets[]"]').forEach(cb => {
-            cb.checked = isChecked;
-        });
-    });
-</script>
 </body>
 </html>
