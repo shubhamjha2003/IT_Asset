@@ -1,135 +1,58 @@
-<?php include('../components/navbar.php'); ?>
-<?php include('../components/sidebar.php'); ?>
-<?php include('../db/connection.php'); ?>
+<?php ob_start(); ?>
+
 
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $field_name = $_POST['field_name'];
-    $form_element = $_POST['form_element'];
-    $format = $_POST['format'];
-    $help_text = $_POST['help_text'];
-    $fieldsets = isset($_POST['fieldsets']) ? implode(',', $_POST['fieldsets']) : '';
+include('../components/navbar.php');
+include('../components/sidebar.php');
+include('../db/connection.php');
 
-    $encrypt = isset($_POST['encrypt']) ? 1 : 0;
-    $auto_add = isset($_POST['auto_add']) ? 1 : 0;
-    $show_in_list = isset($_POST['show_in_list']) ? 1 : 0;
-    $show_in_requestable = isset($_POST['show_in_requestable']) ? 1 : 0;
-    $include_in_email = isset($_POST['include_in_email']) ? 1 : 0;
-    $must_be_unique = isset($_POST['must_be_unique']) ? 1 : 0;
-    $allow_user_view = isset($_POST['allow_user_view']) ? 1 : 0;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $name = $_POST['name'];
+  $company = $_POST['company'];
+  $phone = $_POST['phone'];
+  $fax = $_POST['fax'];
+  $manager = $_POST['manager'];
+  $location = $_POST['location'];
 
-    $stmt = $conn->prepare("INSERT INTO custom_fields (field_name, form_element, format, help_text, encrypt, auto_add, show_in_list, show_in_requestable, include_in_email, must_be_unique, allow_user_view, fieldsets)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssiiiiiiis", $field_name, $form_element, $format, $help_text, $encrypt, $auto_add, $show_in_list, $show_in_requestable, $include_in_email, $must_be_unique, $allow_user_view, $fieldsets);
-    $stmt->execute();
-    $stmt->close();
+  $image = time() . '' . preg_replace('/[^a-zA-Z0-9.\-]/', '_', $_FILES['image']['name']);
+  $target = "../uploaded_file/" . $image;
 
-    header("Location: CustomField.php?msg=added");
-    exit;
+  if (!empty($_FILES['image']['name'])) {
+    move_uploaded_file($_FILES['image']['tmp_name'], $target);
+  }
+
+  $stmt = $conn->prepare("INSERT INTO departments (name, company, phone, fax, manager, location, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  $stmt->bind_param("sssssss", $name, $company, $phone, $fax, $manager, $location, $image);
+  $stmt->execute();
+
+  header("Location: department.php");
+  exit;
 }
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Create Custom Field</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Create Department</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-10 offset-md-2 p-4">
-            <h2 class="mb-4">Create Custom Field</h2>
-
-            <form method="POST">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label>Field Name</label>
-                        <input type="text" name="field_name" class="form-control" required>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label>Form Element</label>
-                        <select name="form_element" class="form-select" required>
-                            <option value="">Select</option>
-                            <option value="Textbox">Textbox</option>
-                            <option value="Textarea">Textarea</option>
-                            <option value="Dropdown">Dropdown</option>
-                            <option value="Checkbox">Checkbox</option>
-                            <option value="Date">Date</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label>Format</label>
-                        <select name="format" class="form-select">
-                            <option value="">Any</option>
-                            <option value="Text">Text</option>
-                            <option value="Number">Number</option>
-                            <option value="Email">Email</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label>Help Text</label>
-                        <input type="text" name="help_text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label>Fieldsets</label><br>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="fieldsets[]" value="PC" id="pc">
-                            <label class="form-check-label" for="pc">PC</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="fieldsets[]" value="Printer" id="printer">
-                            <label class="form-check-label" for="printer">Printer</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="select_all">
-                            <label class="form-check-label" for="select_all"><strong>Select All</strong></label>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label>Options</label><br>
-                        <?php
-                        $checkboxes = [
-                            'encrypt' => 'Encrypt before storing',
-                            'auto_add' => 'Auto add to all types',
-                            'show_in_list' => 'Show in asset list',
-                            'show_in_requestable' => 'Show in request modal',
-                            'include_in_email' => 'Include in email',
-                            'must_be_unique' => 'Must be unique',
-                            'allow_user_view' => 'Allow user to view'
-                        ];
-                        foreach ($checkboxes as $key => $label) {
-                            echo "<div class='form-check'>
-                                    <input class='form-check-input' type='checkbox' name='$key' id='$key'>
-                                    <label class='form-check-label' for='$key'>$label</label>
-                                  </div>";
-                        }
-                        ?>
-                    </div>
-
-                    <div class="col-md-12 mt-4 d-flex justify-content-between">
-                        <a href="CustomField.php" class="btn btn-secondary">Back</a>
-                        <button type="submit" class="btn btn-primary">Save Field</button>
-                    </div>
-                </div>
-            </form>
-
-        </div>
-    </div>
+<div class="content" style="margin-left: 200px; padding-top: 70px;">
+  <div class="container mt-4">
+    <h2>Add New Department</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <div class="mb-3"><label>Name</label><input type="text" name="name" class="form-control" required></div>
+      <div class="mb-3"><label>Company</label><input type="text" name="company" class="form-control"></div>
+      <div class="mb-3"><label>Phone</label><input type="text" name="phone" class="form-control"></div>
+      <div class="mb-3"><label>Fax</label><input type="text" name="fax" class="form-control"></div>
+      <div class="mb-3"><label>Manager</label><input type="text" name="manager" class="form-control"></div>
+      <div class="mb-3"><label>Location</label><input type="text" name="location" class="form-control"></div>
+      <div class="mb-3"><label>Upload Image</label><input type="file" name="image" class="form-control"></div>
+      <button type="submit" class="btn btn-success">Create</button>
+    </form>
+  </div>
 </div>
-
-<script>
-    document.getElementById('select_all').addEventListener('change', function () {
-        const isChecked = this.checked;
-        document.querySelectorAll('input[name="fieldsets[]"]').forEach(cb => {
-            cb.checked = isChecked;
-        });
-    });
-</script>
 </body>
 </html>
+
+<?php ob_end_flush(); ?>
