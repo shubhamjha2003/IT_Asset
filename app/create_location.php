@@ -61,13 +61,51 @@ $companies = $conn->query("SELECT id, name FROM companies");
                         <label>State</label>
                         <select name="state" class="form-select" required>
                             <option value="">Select State</option>
-                            <option>Jharkhand</option>
+                            <option>Andhra Pradesh</option>
+                            <option>Arunachal Pradesh</option>
+                            <option>Assam</option>
                             <option>Bihar</option>
+                            <option>Chhattisgarh</option>
+                            <option>Goa</option>
+                            <option>Gujarat</option>
+                            <option>Haryana</option>
+                            <option>Himachal Pradesh</option>
+                            <option>Jharkhand</option>
+                            <option>Karnataka</option>
+                            <option>Kerala</option>
+                            <option>Madhya Pradesh</option>
+                            <option>Maharashtra</option>
+                            <option>Manipur</option>
+                            <option>Meghalaya</option>
+                            <option>Mizoram</option>
+                            <option>Nagaland</option>
                             <option>Odisha</option>
+                            <option>Punjab</option>
+                            <option>Rajasthan</option>
+                            <option>Sikkim</option>
+                            <option>Tamil Nadu</option>
+                            <option>Telangana</option>
+                            <option>Tripura</option>
+                            <option>Uttar Pradesh</option>
+                            <option>Uttarakhand</option>
+                            <option>West Bengal</option>
+                            <option>Andaman and Nicobar Islands</option>
+                            <option>Chandigarh</option>
+                            <option>Dadra and Nagar Haveli and Daman and Diu</option>
+                            <option>Delhi</option>
+                            <option>Lakshadweep</option>
+                            <option>Puducherry</option>
+
                             <!-- Add more as needed -->
                         </select>
                     </div>
-                    <div class="col-md-4 mb-3"><label>Country</label><input type="text" name="country" class="form-control" value="India" readonly></div>
+                    <div class="col-md-4 mb-3">
+                        <label>Country</label>
+                        <select class="form-select" name="country" required>
+                            <option value="India" selected>India</option>
+                        </select>
+                    </div>
+                    <!-- <div class="col-md-4 mb-3"><label>Country</label><input type="text" name="country" class="form-control" value="India" readonly></div> -->
                     <div class="col-md-4 mb-3"><label>ZIP</label><input type="text" name="zip" class="form-control" required></div>
                     <div class="col-md-4 mb-3"><label>Contact Person</label><input type="text" name="contact" class="form-control" required></div>
                     <div class="col-md-4 mb-3"><label>Phone</label><input type="text" name="phone" class="form-control" required></div>

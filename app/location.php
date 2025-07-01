@@ -45,7 +45,10 @@
                         <td>{$row['country']}</td>
                         <td>{$row['company_name']}</td>
                         <td>{$row['contact_person']}<br>{$row['contact_email']}<br>{$row['phone']}</td>
-                        <td><a href='update_location.php?id={$row['id']}' class='btn btn-sm btn-primary'>Edit</a></td>
+                        <td>
+                            <a href='update_location.php?id={$row['id']}' class='btn btn-sm btn-primary'>Edit</a>
+                            <a href='delete_company.php?id={$row['id']}' class='btn btn-sm btn-danger' onclick=\"return confirm('Are you sure you want to delete this company?');\">Delete</a>
+                        </td>
                     </tr>";
                 }
                 ?>

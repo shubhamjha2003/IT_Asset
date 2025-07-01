@@ -2,9 +2,17 @@
 require_once '../libs/fpdf/fpdf.php';
 include('../db/connection.php');
 
-// Fetch all departments
-$result = $conn->query("SELECT * FROM departments");
+// Fetch departments with company and location names
+$sql = "SELECT d.name, d.phone, d.fax, d.manager,
+               c.name AS company_name,
+               l.name AS location_name
+        FROM departments d
+        LEFT JOIN companies c ON d.company_id = c.id
+        LEFT JOIN locations l ON d.location_id = l.id";
 
+$result = $conn->query($sql);
+
+// Setup FPDF
 $pdf = new FPDF();
 $pdf->AddPage();
 
@@ -28,14 +36,14 @@ $pdf->SetFont('Arial', '', 11);
 
 while ($row = $result->fetch_assoc()) {
     $pdf->Cell(30, 10, $row['name'], 1);
-    $pdf->Cell(30, 10, $row['company'], 1);
+    $pdf->Cell(30, 10, $row['company_name'], 1);
     $pdf->Cell(25, 10, $row['phone'], 1);
     $pdf->Cell(25, 10, $row['fax'], 1);
     $pdf->Cell(35, 10, $row['manager'], 1);
-    $pdf->Cell(45, 10, $row['location'], 1);
+    $pdf->Cell(45, 10, $row['location_name'], 1);
     $pdf->Ln();
 }
 
-// Output
+// Output the PDF
 $pdf->Output();
 ?>
