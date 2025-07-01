@@ -23,13 +23,17 @@
                         <th>City</th>
                         <th>State</th>
                         <th>Country</th>
+                        <th>Company</th>
                         <th>Contact</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php
-                $result = $conn->query("SELECT * FROM locations");
+                $result = $conn->query("SELECT l.*, c.name AS company_name 
+                                        FROM locations l 
+                                        LEFT JOIN companies c ON l.company_id = c.id");
+
                 while ($row = $result->fetch_assoc()) {
                     echo "<tr>
                         <td>{$row['id']}</td>
@@ -39,6 +43,7 @@
                         <td>{$row['city']}</td>
                         <td>{$row['state']}</td>
                         <td>{$row['country']}</td>
+                        <td>{$row['company_name']}</td>
                         <td>{$row['contact_person']}<br>{$row['contact_email']}<br>{$row['phone']}</td>
                         <td><a href='update_location.php?id={$row['id']}' class='btn btn-sm btn-primary'>Edit</a></td>
                     </tr>";

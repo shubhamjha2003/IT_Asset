@@ -2,12 +2,19 @@
 
 <?php include('../components/navbar.php'); ?>
 <?php include('../components/sidebar.php'); ?>
+<?php include('../db/connection.php'); ?>
+
 <?php
-include('../db/connection.php');
 $id = $_GET['id'];
+
+// Fetch current location data
 $result = $conn->query("SELECT * FROM locations WHERE id = $id");
 $data = $result->fetch_assoc();
 
+// Fetch company list for dropdown
+$companies = $conn->query("SELECT id, name FROM companies");
+
+// Update location on form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['name'];
     $code = $_POST['code'];
@@ -20,8 +27,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $contact = $_POST['contact'];
     $email = $_POST['email'];
     $phone = $_POST['phone'];
+    $company_id = $_POST['company_id'];
 
-    $conn->query("UPDATE locations SET name='$name', code='$code', type='$type', address='$address', city='$city', state='$state', country='$country', zip='$zip', contact_person='$contact', contact_email='$email', phone='$phone' WHERE id=$id");
+    $stmt = $conn->prepare("UPDATE locations SET name=?, code=?, type=?, address=?, city=?, state=?, country=?, zip=?, contact_person=?, contact_email=?, phone=?, company_id=? WHERE id=?");
+    $stmt->bind_param("sssssssssssii", $name, $code, $type, $address, $city, $state, $country, $zip, $contact, $email, $phone, $company_id, $id);
+    $stmt->execute();
+    $stmt->close();
+
     header("Location: location.php?msg=updated");
     exit;
 }
@@ -87,6 +99,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="col-md-6 mb-3">
                         <label>Contact Email</label>
                         <input type="email" class="form-control" name="email" value="<?= $data['contact_email'] ?>" required>
+                    </div>
+
+                    <!-- Company Dropdown -->
+                    <div class="col-md-6 mb-3">
+                        <label>Company</label>
+                        <select class="form-select" name="company_id" required>
+                            <option value="">Select Company</option>
+                            <?php while ($row = $companies->fetch_assoc()): ?>
+                                <option value="<?= $row['id'] ?>" <?= $row['id'] == $data['company_id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($row['name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Update Location</button>
