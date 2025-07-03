@@ -1,40 +1,81 @@
 <?php
 session_start();
 require '../db/connection.php';
+require '../vendor/autoload.php';
 
-if (!isset($_SESSION['email'])) {
-    // If accessed directly without register
-    header("Location: register.php");
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+$error = $success = '';
+$user_id = $_SESSION['pending_user_id'] ?? null;
+$user_email = $_SESSION['pending_user_email'] ?? null;
+$user_name = $_SESSION['pending_user_name'] ?? null;
+
+if (!$user_id || !$user_email) {
+    header("Location: login.php");
     exit;
 }
 
-$email = $_SESSION['email'];
-$message = '';
+// Handle OTP verification
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
+    $otp = trim($_POST['otp']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $entered_otp = trim($_POST['otp']);
-
-    $stmt = $conn->prepare("SELECT otp_code, is_verified FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
+    $stmt = $conn->prepare("SELECT id, otp_code, expires_at, verified FROM user_otp_verification_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $stmt->bind_result($db_otp, $is_verified);
-    $stmt->fetch();
-    $stmt->close();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
 
-    if ($is_verified) {
-        $message = "✅ You are already verified. Please log in.";
-    } elseif ($entered_otp === $db_otp) {
-        // Mark user as verified
-        $update = $conn->prepare("UPDATE users SET is_verified = 1 WHERE email = ?");
-        $update->bind_param("s", $email);
-        $update->execute();
-        $update->close();
+    if (!$row) {
+        $error = "❌ No OTP found. Please ask the admin to resend.";
+    } elseif ($row['verified']) {
+        $error = "✅ Already verified.";
+    } elseif ($row['otp_code'] === $otp && strtotime($row['expires_at']) > time()) {
+        $conn->query("UPDATE users SET is_verified = 1 WHERE id = $user_id");
+        $conn->query("UPDATE user_otp_verification_logs SET verified = 1 WHERE id = {$row['id']}");
 
-        $message = "✅ OTP verified successfully! You can now log in.";
-        unset($_SESSION['email']); // Clear session
-        header("refresh:2;url=login.php"); // Redirect after 2 seconds
+        unset($_SESSION['pending_user_id']);
+        $success = "✅ Email verified successfully! You can now login.";
     } else {
-        $message = "❌ Incorrect OTP. Please try again.";
+        $error = "❌ Invalid or expired OTP.";
+    }
+}
+
+// Handle resend OTP
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resend_otp'])) {
+    $otp_code = rand(100000, 999999);
+    $expires_at = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+    // Save new OTP
+    $stmt = $conn->prepare("INSERT INTO user_otp_verification_logs (user_id, otp_code, expires_at) VALUES (?, ?, ?)");
+    $stmt->bind_param("iss", $user_id, $otp_code, $expires_at);
+    $stmt->execute();
+
+    // Send via email
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'shubhamkjc58@gmail.com';
+        $mail->Password = 'mzoq cmkn rhnh hxix'; // Use App Password
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        $mail->setFrom('shubhamkjc58@gmail.com', 'IT Asset System');
+        $mail->addAddress($user_email, $user_name);
+        $mail->isHTML(true);
+        $mail->Subject = 'Resent OTP - IT Asset System';
+        $mail->Body = "<p>Hello <strong>$user_name</strong>,</p>
+                       <p>Your new OTP is:</p>
+                       <h2>$otp_code</h2>
+                       <p>This OTP is valid for 10 minutes.</p>
+                       <p>Regards,<br>IT Asset Team</p>";
+
+        $mail->send();
+        $success = "✅ New OTP sent to <strong>$user_email</strong>";
+    } catch (Exception $e) {
+        $error = "❌ Failed to send OTP. Try again.";
     }
 }
 ?>
@@ -44,27 +85,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <title>Verify OTP - IT Asset</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 500px; margin-top: 100px; }
+    </style>
 </head>
 <body class="bg-light">
-<div class="container mt-5">
-    <div class="card mx-auto shadow" style="max-width: 500px;">
-        <div class="card-body">
-            <h4 class="card-title text-center">OTP Verification</h4>
-            <p class="text-center text-muted">Enter the OTP sent to your email</p>
+<div class="container bg-white p-4 shadow rounded">
+    <h4><i class="bi bi-shield-lock-fill me-2"></i>OTP Verification</h4>
 
-            <?php if (!empty($message)): ?>
-                <div class="alert alert-info text-center"><?= $message ?></div>
-            <?php endif; ?>
+    <?php if ($error): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
+    <?php if ($success): ?><div class="alert alert-success"><?= $success ?></div><?php endif; ?>
 
-            <form method="POST" action="">
-                <div class="mb-3">
-                    <label class="form-label">OTP Code</label>
-                    <input type="text" name="otp" class="form-control" maxlength="6" required>
-                </div>
-                <button type="submit" class="btn btn-success w-100">Verify OTP</button>
-            </form>
+    <?php if (!$success): ?>
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Enter OTP Code</label>
+            <input type="text" name="otp" maxlength="6" class="form-control" required>
         </div>
-    </div>
+        <div class="d-flex justify-content-between">
+            <button type="submit" name="verify_otp" class="btn btn-primary">✅ Verify OTP</button>
+            <button type="submit" name="resend_otp" class="btn btn-outline-secondary">🔄 Resend OTP</button>
+        </div>
+    </form>
+    <?php else: ?>
+        <div class="text-center mt-3"><a href="login.php" class="btn btn-success">Login Now</a></div>
+    <?php endif; ?>
 </div>
 </body>
 </html>
