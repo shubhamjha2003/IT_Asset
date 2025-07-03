@@ -65,10 +65,10 @@
 <div class="sidebar">
   <h2><i class="bi bi-grid-3x3-gap-fill me-2"></i>Menu</h2>
   <ul class="menu">
-    <li><a href="/IT_Asset/app/dashboard.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-    <li><a href="/IT_Asset/app/asset.php"><i class="bi bi-hdd-stack me-2"></i>Assets</a></li>
-    <li><a href="/IT_Asset/app/reports.php"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reports</a></li>
-    <li><a href="/IT_Asset/app/users.php"><i class="bi bi-people me-2"></i>Users</a></li>
+    <li><a href="index.php"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+    <li><a href="Asset.php"><i class="bi bi-hdd-stack me-2"></i>Assets</a></li>
+    <li><a href="Reports.php"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reports</a></li>
+    <li><a href="Users.php"><i class="bi bi-people me-2"></i>Users</a></li>
 
     <li class="has-submenu">
       <a href="#" onclick="toggleSubmenu(this)">
