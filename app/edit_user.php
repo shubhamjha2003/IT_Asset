@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../db/connection.php';
+require '../functions/logActivity.php'; // ✅ Activity logging function
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'super_admin') {
     header("Location: dashboard.php");
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'];
     $newImage = $image;
 
-    // Handle new image upload
+    // ✅ Handle new image upload
     if (!empty($_FILES['image']['name'])) {
         $imgName = time() . '_' . basename($_FILES['image']['name']);
         $target = "../uploaded_file/" . $imgName;
@@ -46,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($update->execute()) {
         $success = "✅ User updated successfully.";
+
+        // ✅ Log the activity
+        $adminId = $_SESSION['user_id'];
+        logActivity($conn, $adminId, 'update_user', "Updated user ($email) to role $role");
     } else {
         $error = "❌ Update failed. Email may already exist.";
     }

@@ -2,17 +2,18 @@
 session_start();
 require '../db/connection.php';
 require '../vendor/autoload.php';
+require '../functions/logActivity.php'; // ✅ Include log activity function
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-// Google reCAPTCHA secret key
+// ✅ reCAPTCHA secret
 $recaptchaSecret = '6Lf_umwrAAAAAA-1uQOEo9AJ-JV-sDqAUuHLPBPS';
 
 $error = '';
 $showToast = false;
 $toastMessage = '';
 
-// ✅ Check if users table is empty
+// ✅ Redirect to super admin setup if no users exist
 $checkUsers = $conn->query("SELECT COUNT(*) AS total FROM users");
 $row = $checkUsers->fetch_assoc();
 if ($row['total'] == 0) {
@@ -20,7 +21,7 @@ if ($row['total'] == 0) {
     exit;
 }
 
-// ✅ Auto-login if cookies exist
+// ✅ Auto-login from cookies
 if (isset($_COOKIE['remember_email']) && isset($_COOKIE['remember_token'])) {
     $email = $_COOKIE['remember_email'];
     $token = $_COOKIE['remember_token'];
@@ -37,22 +38,21 @@ if (isset($_COOKIE['remember_email']) && isset($_COOKIE['remember_token'])) {
         $_SESSION['email'] = $email;
         $_SESSION['name'] = $name;
         $_SESSION['role'] = $role;
+
+        logActivity($conn, $id, 'auto_login', 'Auto login via cookies');
         header("Location: ../app/dashboard.php");
         exit;
     }
 }
 
-// ✅ Handle login form submission
+// ✅ Handle login form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $remember = isset($_POST['remember']);
 
-    // Verify reCAPTCHA
     $captcha = $_POST['g-recaptcha-response'] ?? '';
-    $captchaResponse = file_get_contents(
-        "https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$captcha}"
-    );
+    $captchaResponse = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$captcha}");
     $captchaSuccess = json_decode($captchaResponse)->success;
 
     if (!$captchaSuccess) {
@@ -82,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         setcookie('remember_token', $token, time() + (86400 * 7), "/");
                     }
 
+                    logActivity($conn, $id, 'login', 'User logged in');
                     header("Location: ../app/dashboard.php");
                     exit;
                 } else {
@@ -89,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['pending_user_email'] = $email;
                     $_SESSION['pending_user_name'] = $name;
 
+                    logActivity($conn, $id, 'otp_redirect', 'User redirected to OTP verification');
                     header("Location: verify_otp.php");
                     exit;
                 }
@@ -105,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ✅ Show logout success message
+// ✅ Show logout success message (if redirected from logout)
 if (isset($_SESSION['logout_success'])) {
     $showToast = true;
     $toastMessage = $_SESSION['logout_success'];

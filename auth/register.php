@@ -2,6 +2,7 @@
 session_start();
 require '../db/connection.php';
 require '../vendor/autoload.php';
+require '../functions/logActivity.php'; // ✅ Log activity
 
 use PHPMailer\PHPMailer\PHPMailer;
 
@@ -19,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role     = $_POST['role'];
     $image    = '';
 
-    // Upload image if provided
+    // ✅ Upload image
     if (!empty($_FILES['image']['name'])) {
         $imgName = time() . '_' . basename($_FILES['image']['name']);
         $target = "../uploaded_file/" . $imgName;
@@ -28,27 +29,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Insert user
+    // ✅ Insert user
     $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, image) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sssss", $name, $email, $password, $role, $image);
 
     if ($stmt->execute()) {
         $userId = $stmt->insert_id;
 
-        // Generate OTP
+        // ✅ Log activity
+        logActivity($conn, $_SESSION['user_id'], 'register_user', "Registered new user ($email) with role $role");
+
+        // ✅ Generate OTP
         $otp = rand(100000, 999999);
         $expires = date("Y-m-d H:i:s", strtotime("+10 minutes"));
-
         $conn->query("INSERT INTO user_otp_verification_logs (user_id, otp_code, expires_at) VALUES ($userId, '$otp', '$expires')");
 
-        // Send OTP via email
+        // ✅ Send OTP
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             $mail->Username   = 'shubhamkjc58@gmail.com';
-            $mail->Password   = 'mzoq cmkn rhnh hxix';
+            $mail->Password   = 'mzoq cmkn rhnh hxix'; // ⚠️ Secure this via env file ideally
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
 
