@@ -6,6 +6,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'super_admin') {
     header("Location: dashboard.php");
     exit;
 }
+<<<<<<< HEAD
 
 $filterRole = $_GET['role'] ?? '';
 $roles = ['department_admin', 'it_manager', 'viewer'];
@@ -20,21 +21,19 @@ $result = $conn->query($query);
 $success = $_SESSION['success'] ?? '';
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['success'], $_SESSION['error']);
+=======
+>>>>>>> 1c9bfe934d06210f89e47d801ebdd5e551048117
 ?>
-
+<?php include('../components/navbar.php'); ?>
+<?php include('../components/sidebar.php'); ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manage Users - IT Asset</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>User List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <style>
-        .role-badge {
-            text-transform: capitalize;
-        }
-    </style>
 </head>
+<<<<<<< HEAD
 <body class="bg-light">
 
 <?php include '../components/navbar.php'; ?>
@@ -57,13 +56,65 @@ unset($_SESSION['success'], $_SESSION['error']);
         <h4><i class="bi bi-people-fill me-2"></i>Manage Users</h4>
         <div>
             <a href="../auth/register.php" class="btn btn-primary me-2">
+=======
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 offset-md-2 p-4">
+            <h2 class="mb-4">Manage Users</h2>
+            <a href="../auth/register.php" class="btn btn-primary mb-3">
+>>>>>>> 1c9bfe934d06210f89e47d801ebdd5e551048117
                 <i class="bi bi-person-plus-fill me-1"></i> Create User
             </a>
-            <a href="archived_users.php" class="btn btn-outline-secondary">
-                <i class="bi bi-archive me-1"></i> Archived Users
-            </a>
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Verified</th>
+                        <th>Image</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php
+                $result = $conn->query("SELECT * FROM users WHERE is_active = 1");
+                while ($row = $result->fetch_assoc()) {
+                    echo "<tr>
+                        <td>{$row['id']}</td>
+                        <td>" . htmlspecialchars($row['employee_id']) . "</td>
+                        <td>" . htmlspecialchars($row['name']) . "</td>
+                        <td>" . htmlspecialchars($row['email']) . "</td>
+                        <td><span class='badge bg-info text-dark'>" . ucfirst($row['role']) . "</span></td>
+                        <td><span class='badge bg-success'>Active</span></td>
+                        <td>";
+                            echo $row['is_verified'] ? "<span class='badge bg-success'>Yes</span>" : "<span class='badge bg-warning text-dark'>No</span>";
+                        echo "</td>
+                        <td>";
+                            if (!empty($row['image'])) {
+                                echo "<img src='../uploaded_file/{$row['image']}' width='50' height='50' class='rounded-circle' style='object-fit:cover;'>";
+                            } else {
+                                echo "<i class='bi bi-person-circle fs-4 text-muted'></i>";
+                            }
+                        echo "</td>
+                        <td>" . date('d M Y', strtotime($row['created_at'])) . "</td>
+                        <td>
+                            <a href='edit_user.php?id={$row['id']}' class='btn btn-sm btn-warning'><i class='bi bi-pencil'></i></a>
+                            <a href='delete_user.php?id={$row['id']}' class='btn btn-sm btn-danger' onclick=\"return confirm('Are you sure you want to delete this user?')\"><i class='bi bi-trash'></i></a>
+                        </td>
+                    </tr>";
+                }
+                ?>
+                </tbody>
+            </table>
         </div>
     </div>
+<<<<<<< HEAD
 
     <form method="GET" class="row g-2 mb-3">
         <div class="col-auto">
@@ -125,7 +176,8 @@ unset($_SESSION['success'], $_SESSION['error']);
             </tbody>
         </table>
     </div>
+=======
+>>>>>>> 1c9bfe934d06210f89e47d801ebdd5e551048117
 </div>
-
 </body>
 </html>
