@@ -2,18 +2,18 @@
 session_start();
 require '../db/connection.php';
 require '../vendor/autoload.php';
-require '../functions/logActivity.php'; // ✅ Include log activity function
+require '../functions/logActivity.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 
-// ✅ reCAPTCHA secret
+// reCAPTCHA
 $recaptchaSecret = '6Lf_umwrAAAAAA-1uQOEo9AJ-JV-sDqAUuHLPBPS';
 
 $error = '';
 $showToast = false;
 $toastMessage = '';
 
-// ✅ Redirect to super admin setup if no users exist
+// Redirect to setup page if no users exist
 $checkUsers = $conn->query("SELECT COUNT(*) AS total FROM users");
 $row = $checkUsers->fetch_assoc();
 if ($row['total'] == 0) {
@@ -21,7 +21,7 @@ if ($row['total'] == 0) {
     exit;
 }
 
-// ✅ Auto-login from cookies
+// Auto-login with cookies
 if (isset($_COOKIE['remember_email']) && isset($_COOKIE['remember_token'])) {
     $email = $_COOKIE['remember_email'];
     $token = $_COOKIE['remember_token'];
@@ -38,14 +38,13 @@ if (isset($_COOKIE['remember_email']) && isset($_COOKIE['remember_token'])) {
         $_SESSION['email'] = $email;
         $_SESSION['name'] = $name;
         $_SESSION['role'] = $role;
-
         logActivity($conn, $id, 'auto_login', 'Auto login via cookies');
         header("Location: ../app/dashboard.php");
         exit;
     }
 }
 
-// ✅ Handle login form
+// Login form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
@@ -56,9 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $captchaSuccess = json_decode($captchaResponse)->success;
 
     if (!$captchaSuccess) {
-        $error = "⚠️ CAPTCHA verification failed.";
+        $toastMessage = "⚠️ CAPTCHA verification failed.";
         $showToast = true;
-        $toastMessage = $error;
     } else {
         $stmt = $conn->prepare("SELECT id, name, password, role, is_verified FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
@@ -69,7 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_result($id, $name, $hashed_password, $role, $is_verified);
             $stmt->fetch();
 
-            if (password_verify($password, $hashed_password)) {
+            // 🛑 Block login if user is not allowed
+            if ($role === 'do_not_login') {
+                $toastMessage = "🚫 You are not authorized to login. If you need help, contact the Admin.";
+                $showToast = true;
+            } elseif (!$hashed_password || !$email) {
+                $toastMessage = "⚠️ Login not available for this user. Contact Admin.";
+                $showToast = true;
+            } elseif (password_verify($password, $hashed_password)) {
                 if ($is_verified == 1) {
                     $_SESSION['user_id'] = $id;
                     $_SESSION['email'] = $email;
@@ -89,28 +94,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['pending_user_id'] = $id;
                     $_SESSION['pending_user_email'] = $email;
                     $_SESSION['pending_user_name'] = $name;
-
                     logActivity($conn, $id, 'otp_redirect', 'User redirected to OTP verification');
                     header("Location: verify_otp.php");
                     exit;
                 }
             } else {
-                $error = "❌ Incorrect password.";
+                $toastMessage = "❌ Incorrect password.";
                 $showToast = true;
-                $toastMessage = $error;
             }
         } else {
-            $error = "❌ No user found with this email.";
+            $toastMessage = "❌ No user found with this email.";
             $showToast = true;
-            $toastMessage = $error;
         }
     }
 }
 
-// ✅ Show logout success message (if redirected from logout)
+// Toast for logout
 if (isset($_SESSION['logout_success'])) {
-    $showToast = true;
     $toastMessage = $_SESSION['logout_success'];
+    $showToast = true;
     unset($_SESSION['logout_success']);
 }
 ?>
@@ -125,18 +127,19 @@ if (isset($_SESSION['logout_success'])) {
 </head>
 <body class="bg-light">
 
-<!-- Toast Container -->
+<!-- ✅ Toast -->
+<?php if ($showToast): ?>
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
-    <div id="toastMessage" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast text-bg-danger border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
-            <div class="toast-body">
-                <?= htmlspecialchars($toastMessage) ?>
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div class="toast-body"><?= htmlspecialchars($toastMessage) ?></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<!-- ✅ Login Form -->
 <div class="container mt-5">
     <div class="card mx-auto shadow" style="max-width: 500px;">
         <div class="card-body">
@@ -168,16 +171,6 @@ if (isset($_SESSION['logout_success'])) {
         </div>
     </div>
 </div>
-
-<?php if ($showToast): ?>
-<script>
-    window.addEventListener('load', function () {
-        const toastEl = document.getElementById('toastMessage');
-        const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
-        toast.show();
-    });
-</script>
-<?php endif; ?>
 
 </body>
 </html>
