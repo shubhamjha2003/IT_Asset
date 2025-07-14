@@ -16,9 +16,9 @@ $success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emp_id   = trim($_POST['emp_id']);
     $name     = trim($_POST['name']);
-    $role     = $_POST['role'];
-    $email    = isset($_POST['email']) ? trim($_POST['email']) : null;
-    $password = isset($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
+    $role     = $_POST['role']; // "do_not_login" is now stored in DB
+    $email    = isset($_POST['email']) && $_POST['email'] !== '' ? trim($_POST['email']) : null;
+    $password = isset($_POST['password']) && $_POST['password'] !== '' ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
     $image    = '';
 
     if (!empty($_FILES['image']['name'])) {
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt->execute()) {
         $userId = $stmt->insert_id;
-        logActivity($conn, $_SESSION['user_id'], 'register_user', "Registered new user ($email) with role $role");
+        logActivity($conn, $_SESSION['user_id'], 'register_user', "Registered new user ($emp_id) with role $role");
 
         if (in_array($role, ['department_admin', 'it_manager', 'viewer']) && $email) {
             $otp = rand(100000, 999999);
@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <option value="department_admin">Department Admin</option>
                 <option value="it_manager">IT Manager</option>
                 <option value="viewer">Viewer</option>
-                <option value="disabled">Do Not Able to Login</option>
+                <option value="do_not_login">Do Not Able to Login</option> <!-- ✅ FIXED VALUE -->
             </select>
         </div>
 
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const email = document.getElementById('emailField');
         const password = document.getElementById('passwordField');
 
-        if (selected === 'disabled') {
+        if (selected === 'do_not_login') {
             email.disabled = true;
             password.disabled = true;
             email.required = false;
