@@ -19,19 +19,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $notes = $_POST['notes'];
 
     // Handle image upload
-    $imageName = $_FILES['image']['name'];
-    $imageTmp = $_FILES['image']['tmp_name'];
-    $imagePath = '../uploads/suppliers/' . $imageName;
+    $image_path = "";
 
-    if (move_uploaded_file($imageTmp, $imagePath)) {
+    if (isset($_FILES["image"]) && $_FILES["image"]["error"] === 0) {
+        $upload_dir = "../uploads/suppliers/";
+
+        // Create the folder if it does not exist
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        // Unique file name to prevent overwriting
+        $file_name = time() . "_" . basename($_FILES["image"]["name"]);
+        $target_file = $upload_dir . $file_name;
+
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+            // Save relative path for DB
+            $image_path = "uploads/suppliers/" . $file_name;
+        } else {
+            $error = "Image upload failed.";
+        }
+    }
+
+    // Insert supplier only if upload succeeded (or no image given)
+    if (empty($error)) {
         $stmt = $conn->prepare("INSERT INTO suppliers (name, address, city, state, country, zip, contact_name, phone, fax, email, url, notes, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssssss", $name, $address, $city, $state, $country, $zip, $contact, $phone, $fax, $email, $url, $notes, $imagePath);
+        $stmt->bind_param("sssssssssssss", $name, $address, $city, $state, $country, $zip, $contact, $phone, $fax, $email, $url, $notes, $image_path);
         $stmt->execute();
         $stmt->close();
         header("Location: supplier.php?msg=added");
         exit;
-    } else {
-        $error = "Image upload failed.";
     }
 }
 ?>
